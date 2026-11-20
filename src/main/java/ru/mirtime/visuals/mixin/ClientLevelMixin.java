@@ -7,7 +7,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import ru.mirtime.visuals.VisualConfig;
 
-@Mixin(ClientLevel.class)
+@Mixin(ClientLevel.ClientLevelData.class)
 public class ClientLevelMixin {
 
     @Inject(method = "getDayTime", at = @At("HEAD"), cancellable = true)
@@ -18,7 +18,7 @@ public class ClientLevelMixin {
             case 1 -> 6000L;  // Ясный день
             case 2 -> 12800L; // Красивый закат
             case 3 -> 18000L; // Глубокая ночь
-            case 4 -> (System.currentTimeMillis() / 10L) % 24000L; // Плавная перемотка дня и ночи
+            case 4 -> (System.currentTimeMillis() / 10L) % 24000L; // Плавный цикл
             default -> VisualConfig.customTimeTick;
         };
         cir.setReturnValue(time);
