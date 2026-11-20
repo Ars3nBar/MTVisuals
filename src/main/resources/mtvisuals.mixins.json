@@ -10,7 +10,8 @@
     "FogMixin",
     "NoHurtCamMixin",
     "GammaMixin",
-    "ZoomMixin"
+    "ZoomMixin",
+    "InGameHudMixin"
   ],
   "injectors": {
     "defaultRequire": 1
