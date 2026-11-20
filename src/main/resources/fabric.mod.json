@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "id": "mtvisuals",
+  "version": "${version}",
+  "name": "MTVisuals",
+  "description": "Локальные 3D-визуалы, косметика, хит-эффекты, управление временем и кибер-HUD для Minecraft 1.21.4",
+  "authors": [
+    "Ars3nBar"
+  ],
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "ru.mirtime.visuals.MTVisualsClient"
+    ]
+  },
+  "mixins": [
+    "mtvisuals.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.16.0",
+    "minecraft": "~1.21.4",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}
