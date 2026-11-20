@@ -416,7 +416,7 @@ public class HudAndGuiScreen extends Screen {
         leftClicks.removeIf(t -> now - t > 1000L);
         rightClicks.removeIf(t -> now - t > 1000L);
 
-        // 0. Красная виньетка при малом HP
+        // 0. Красная виньетка при малом HP (< 7 единиц)
         if (VisualConfig.lowHpVignette && mc.player.getHealth() < 7.0f) {
             int pulse = (int) ((Math.sin(now / 150.0) + 1.0) * 45 + 30);
             int vigCol = (pulse << 24) | 0xFF0022;
@@ -455,6 +455,7 @@ public class HudAndGuiScreen extends Screen {
             drawKey(g, mc, rTxt, 42, 48, 40, 20, rmb, c2);
             g.pose().popPose();
         }
+
         // 3. Armor HUD + предупреждение о поломке
         boolean lowArmor = false;
         if (VisualConfig.armorHud) {
@@ -495,7 +496,7 @@ public class HudAndGuiScreen extends Screen {
         }
 
         // 5. Target HUD (перетаскиваемый и масштабируемый)
-        if (VisualConfig.targetHud && (mc.crosshairPickEntity instanceof LivingEntity || mc.currentScreen instanceof HudAndGuiScreen)) {
+        if (VisualConfig.targetHud && (mc.crosshairPickEntity instanceof LivingEntity || mc.screen instanceof HudAndGuiScreen)) {
             LivingEntity target = (mc.crosshairPickEntity instanceof LivingEntity le) ? le : mc.player;
             g.pose().pushPose();
             g.pose().translate(VisualConfig.targetHudX, VisualConfig.targetHudY, 0);
