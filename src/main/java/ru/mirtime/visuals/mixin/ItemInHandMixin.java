@@ -19,7 +19,7 @@ public class ItemInHandMixin {
     private void onRenderHand(AbstractClientPlayer player, float partialTicks, float pitch, InteractionHand hand, float swingProgress, ItemStack stack, float equippedProgress, PoseStack poseStack, MultiBufferSource buffer, int combinedLight, CallbackInfo ci) {
         if (!VisualConfig.handView || stack.isEmpty()) return;
         float side = hand == InteractionHand.MAIN_HAND ? 1.0f : -1.0f;
-        poseStack.translate(side * 0.05f, -0.04f, -0.08f);
-        poseStack.scale(0.85f, 0.85f, 0.85f);
+        poseStack.translate(side * VisualConfig.handOffsetX, VisualConfig.handOffsetY, -0.08f);
+        poseStack.scale(VisualConfig.handScale, VisualConfig.handScale, VisualConfig.handScale);
     }
 }
