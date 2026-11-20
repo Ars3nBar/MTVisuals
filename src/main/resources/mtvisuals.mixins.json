@@ -1,0 +1,14 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "ru.mirtime.visuals.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+    "ClientLevelMixin",
+    "GuiGraphicsMixin",
+    "ItemInHandMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
