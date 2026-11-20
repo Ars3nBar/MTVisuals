@@ -17,9 +17,20 @@ public class HudAndGuiScreen extends Screen {
 
     private static int activeTab = 0;
     private static float scrollY = 0f, targetScrollY = 0f, openAnim = 0f;
+
+    // 0=Watermark, 1=Keystrokes, 2=Armor, 3=Potions, 4=TargetHUD
     private static int draggingHud = -1;
+    private static int resizingHud = -1;
     private static float dragOffsetX = 0, dragOffsetY = 0;
+    private static float resizeStartX = 0, resizeStartScale = 1.0f;
+    private static Float snapLineX = null, snapLineY = null;
+
+    // Анимации и PvP-счётчики
     private static float animatedTargetHp = 20f;
+    private static int comboCount = 0;
+    private static float lastReach = 0f;
+    private static long lastHitTime = 0L;
+    private static int lastHurtTime = 0;
     private static final List<Long> leftClicks = new ArrayList<>();
     private static final List<Long> rightClicks = new ArrayList<>();
     private static boolean wasLmbDown = false, wasRmbDown = false;
@@ -43,43 +54,31 @@ public class HudAndGuiScreen extends Screen {
         switch (activeTab) {
             case 0 -> {
                 widgets.add(new CustomToggle("Watermark (Логотип)", () -> VisualConfig.watermark, v -> VisualConfig.watermark = v));
-                widgets.add(new CustomCycle("Стиль Watermark", () -> switch (VisualConfig.watermarkStyle) {
-                    case 1 -> "Minimal Pill"; case 2 -> "Full Stats"; default -> "Cyber Bar";
-                }, () -> VisualConfig.watermarkStyle = (VisualConfig.watermarkStyle + 1) % 3));
                 widgets.add(new CustomToggle("Keystrokes (Клавиши)", () -> VisualConfig.keystrokes, v -> VisualConfig.keystrokes = v));
                 widgets.add(new CustomToggle("Счётчик CPS в Keystrokes", () -> VisualConfig.keystrokesCps, v -> VisualConfig.keystrokesCps = v));
                 widgets.add(new CustomToggle("Armor HUD (Броня)", () -> VisualConfig.armorHud, v -> VisualConfig.armorHud = v));
-                widgets.add(new CustomToggle("Процент прочности брони", () -> VisualConfig.armorDurability, v -> VisualConfig.armorDurability = v));
                 widgets.add(new CustomToggle("Potions HUD (Эффекты)", () -> VisualConfig.potionsHud, v -> VisualConfig.potionsHud = v));
                 widgets.add(new CustomToggle("Target HUD (Карточка цели)", () -> VisualConfig.targetHud, v -> VisualConfig.targetHud = v));
-                widgets.add(new CustomCycle("Стиль Target HUD", () -> switch (VisualConfig.targetHudStyle) {
-                    case 1 -> "Compact Neon"; case 2 -> "Minimalist"; default -> "Modern Card";
-                }, () -> VisualConfig.targetHudStyle = (VisualConfig.targetHudStyle + 1) % 3));
+                widgets.add(new CustomToggle("Магнитные линии HUD (Snap)", () -> VisualConfig.hudSnapLines, v -> VisualConfig.hudSnapLines = v));
                 widgets.add(new CustomToggle("ArrayList (Список модулей)", () -> VisualConfig.arrayList, v -> VisualConfig.arrayList = v));
                 widgets.add(new CustomToggle("Неоновый хотбар", () -> VisualConfig.hotbarGlow, v -> VisualConfig.hotbarGlow = v));
                 widgets.add(new CustomToggle("Кастомный прицел", () -> VisualConfig.customCrosshair, v -> VisualConfig.customCrosshair = v));
                 widgets.add(new CustomCycle("Стиль прицела", () -> switch (VisualConfig.crosshairStyle) {
-                    case 1 -> "Круг"; case 2 -> "Скобки"; case 3 -> "Крест-вращение"; default -> "Крест";
-                }, () -> VisualConfig.crosshairStyle = (VisualConfig.crosshairStyle + 1) % 4));
+                    case 1 -> "Круг"; case 2 -> "Скобки"; default -> "Крест";
+                }, () -> VisualConfig.crosshairStyle = (VisualConfig.crosshairStyle + 1) % 3));
                 widgets.add(new CustomToggle("Динамический прицел", () -> VisualConfig.dynamicCrosshair, v -> VisualConfig.dynamicCrosshair = v));
                 widgets.add(new CustomToggle("Стеклянный фон инвентаря", () -> VisualConfig.inventoryGlass, v -> VisualConfig.inventoryGlass = v));
                 widgets.add(new CustomToggle("Streamer Mode (Скрыть ник)", () -> VisualConfig.streamerMode, v -> VisualConfig.streamerMode = v));
             }
             case 1 -> {
-                widgets.add(new CustomCycle("Головной убор", VisualConfig::getHatName, () -> VisualConfig.hatMode = (VisualConfig.hatMode + 1) % 7));
-                widgets.add(new CustomCycle("Аксессуар на спину", VisualConfig::getBackName, () -> VisualConfig.backMode = (VisualConfig.backMode + 1) % 6));
-                widgets.add(new CustomCycle("Питомец-спутник", VisualConfig::getPetName, () -> VisualConfig.petMode = (VisualConfig.petMode + 1) % 6));
+                widgets.add(new CustomCycle("Головной убор", VisualConfig::getHatName, () -> VisualConfig.hatMode = (VisualConfig.hatMode + 1) % 9));
+                widgets.add(new CustomCycle("Аксессуар на спину", VisualConfig::getBackName, () -> VisualConfig.backMode = (VisualConfig.backMode + 1) % 8));
+                widgets.add(new CustomCycle("Питомец-спутник", VisualConfig::getPetName, () -> VisualConfig.petMode = (VisualConfig.petMode + 1) % 8));
                 widgets.add(new CustomSlider("Размер косметики", 0.4f, 2.0f, () -> VisualConfig.accessorySize, v -> VisualConfig.accessorySize = v));
                 widgets.add(new CustomToggle("Видеть косметику от 1-го лица", () -> VisualConfig.firstPersonCosmetics, v -> VisualConfig.firstPersonCosmetics = v));
                 widgets.add(new CustomToggle("Шлейф (Trails)", () -> VisualConfig.trails, v -> VisualConfig.trails = v));
-                widgets.add(new CustomCycle("Стиль шлейфа", () -> switch (VisualConfig.trailStyle) {
-                    case 1 -> "Неоновая лента"; case 2 -> "Кристаллы"; default -> "Двойная линия";
-                }, () -> VisualConfig.trailStyle = (VisualConfig.trailStyle + 1) % 3));
                 widgets.add(new CustomSlider("Длина шлейфа", 0.3f, 2.5f, () -> VisualConfig.trailLength, v -> VisualConfig.trailLength = v));
                 widgets.add(new CustomToggle("Круги при прыжке", () -> VisualConfig.jumpCircles, v -> VisualConfig.jumpCircles = v));
-                widgets.add(new CustomCycle("Стиль кругов прыжка", () -> switch (VisualConfig.jumpCircleStyle) {
-                    case 1 -> "Тройная волна"; case 2 -> "Звезда"; default -> "Двойное кольцо";
-                }, () -> VisualConfig.jumpCircleStyle = (VisualConfig.jumpCircleStyle + 1) % 3));
                 widgets.add(new CustomToggle("Кольца при шагах", () -> VisualConfig.footstepRings, v -> VisualConfig.footstepRings = v));
                 widgets.add(new CustomToggle("Неоновая аура тела", () -> VisualConfig.bodyAura, v -> VisualConfig.bodyAura = v));
             }
@@ -87,8 +86,14 @@ public class HudAndGuiScreen extends Screen {
                 widgets.add(new CustomToggle("TargetESP (Подсветка цели)", () -> VisualConfig.targetEsp, v -> VisualConfig.targetEsp = v));
                 widgets.add(new CustomCycle("Стиль TargetESP", VisualConfig::getTargetEspName, () -> VisualConfig.targetEspStyle = (VisualConfig.targetEspStyle + 1) % 5));
                 widgets.add(new CustomSlider("Скорость TargetESP", 0.3f, 3.0f, () -> VisualConfig.targetEspSpeed, v -> VisualConfig.targetEspSpeed = v));
+                widgets.add(new CustomToggle("Подсветка блока (BlockOverlay)", () -> VisualConfig.blockOverlay, v -> VisualConfig.blockOverlay = v));
+                widgets.add(new CustomToggle("Радиус кристаллов и TNT", () -> VisualConfig.crystalRadius, v -> VisualConfig.crystalRadius = v));
+                widgets.add(new CustomToggle("Линии до игроков (Tracers)", () -> VisualConfig.playerTracers, v -> VisualConfig.playerTracers = v));
+                widgets.add(new CustomToggle("Виньетка при низком HP", () -> VisualConfig.lowHpVignette, v -> VisualConfig.lowHpVignette = v));
+                widgets.add(new CustomToggle("Предупреждение о броне", () -> VisualConfig.armorBreakWarning, v -> VisualConfig.armorBreakWarning = v));
+                widgets.add(new CustomToggle("Счётчик Комбо и Reach", () -> VisualConfig.comboCounter, v -> VisualConfig.comboCounter = v));
                 widgets.add(new CustomToggle("Неоновые хитбоксы", () -> VisualConfig.customHitboxes, v -> VisualConfig.customHitboxes = v));
-                widgets.add(new CustomToggle("Двойной контур хитбоксов", () -> VisualConfig.hitboxFill, v -> VisualConfig.hitboxFill = v));
+                widgets.add(new CustomToggle("Заливка хитбоксов", () -> VisualConfig.hitboxFill, v -> VisualConfig.hitboxFill = v));
                 widgets.add(new CustomToggle("Частицы при ударе", () -> VisualConfig.hitParticles, v -> VisualConfig.hitParticles = v));
                 widgets.add(new CustomCycle("Форма частиц удара", () -> switch (VisualConfig.hitParticleStyle) {
                     case 1 -> "Звёзды"; case 2 -> "Сферы"; default -> "Искры";
@@ -98,7 +103,7 @@ public class HudAndGuiScreen extends Screen {
                 widgets.add(new CustomToggle("Траектория полёта", () -> VisualConfig.trajectories, v -> VisualConfig.trajectories = v));
                 widgets.add(new CustomToggle("Точка приземления", () -> VisualConfig.trajectoryLandingBox, v -> VisualConfig.trajectoryLandingBox = v));
                 widgets.add(new CustomToggle("Трекер Эндер-жемчуга", () -> VisualConfig.pearlTracker, v -> VisualConfig.pearlTracker = v));
-                widgets.add(new CustomToggle("Подсветка предметов на земле", () -> VisualConfig.itemPhysics, v -> VisualConfig.itemPhysics = v));
+                widgets.add(new CustomToggle("Подсветка предметов", () -> VisualConfig.itemPhysics, v -> VisualConfig.itemPhysics = v));
                 widgets.add(new CustomToggle("NoHurtCam (Без тряски)", () -> VisualConfig.noHurtCam, v -> VisualConfig.noHurtCam = v));
                 widgets.add(new CustomToggle("Плавный Zoom (Кнопка C)", () -> VisualConfig.smoothZoom, v -> VisualConfig.smoothZoom = v));
                 widgets.add(new CustomSlider("Кратность Zoom", 1.5f, 8.0f, () -> VisualConfig.zoomFactor, v -> VisualConfig.zoomFactor = v));
@@ -122,7 +127,6 @@ public class HudAndGuiScreen extends Screen {
                 widgets.add(new CustomSlider("Плотность частиц", 10f, 150f, () -> (float) VisualConfig.particleDensity, v -> VisualConfig.particleDensity = Math.round(v)));
                 widgets.add(new CustomToggle("Fullbright (Полная яркость)", () -> VisualConfig.fullbright, v -> VisualConfig.fullbright = v));
                 widgets.add(new CustomToggle("Неоновый туман", () -> VisualConfig.customFog, v -> VisualConfig.customFog = v));
-                widgets.add(new CustomToggle("Кастомное небо", () -> VisualConfig.customSkyColor, v -> VisualConfig.customSkyColor = v));
             }
             case 5 -> {
                 widgets.add(new CustomCycle("Цветовая палитра", VisualConfig::getThemeName, () -> VisualConfig.themeMode = (VisualConfig.themeMode + 1) % 8));
@@ -153,7 +157,7 @@ public class HudAndGuiScreen extends Screen {
         g.fill(winX + 115, winY, winX + 116, winY + winH, (0x55 << 24) | (c1 & 0x00FFFFFF));
 
         g.drawString(this.font, "§lMTVISUALS", winX + 16, winY + 16, c1, false);
-        g.drawString(this.font, "v4.0 ULTRA", winX + 16, winY + 28, 0xFF7A8299, false);
+        g.drawString(this.font, "v5.0 ULTRA", winX + 16, winY + 28, 0xFF7A8299, false);
 
         for (int i = 0; i < TABS.length; i++) {
             int ty = winY + 52 + i * 32;
@@ -168,7 +172,7 @@ public class HudAndGuiScreen extends Screen {
             g.drawString(this.font, TABS[i], winX + 18, ty + 8, sel ? 0xFFFFFFFF : 0xFFA0A8C0, false);
         }
 
-        g.drawString(this.font, "§7Тащи HUD мышкой", winX + 12, winY + winH - 22, 0xFF667085, false);
+        g.drawString(this.font, "§7Тащи HUD / уголок=размер", winX + 8, winY + winH - 20, 0xFF667085, false);
         g.drawString(this.font, "§l" + TABS[activeTab], winX + 130, winY + 14, 0xFFFFFFFF, false);
         g.fill(winX + 126, winY + 29, winX + winW - 12, winY + 30, 0x22FFFFFF);
 
@@ -181,12 +185,26 @@ public class HudAndGuiScreen extends Screen {
         }
         g.disableScissor();
 
-        int col = (0x66 << 24) | (c1 & 0x00FFFFFF);
-        if (VisualConfig.watermark) g.renderOutline((int) VisualConfig.watermarkX - 2, (int) VisualConfig.watermarkY - 2, 154, 22, col);
-        if (VisualConfig.keystrokes) g.renderOutline((int) VisualConfig.keystrokesX - 2, (int) VisualConfig.keystrokesY - 2, 88, 82, col);
-        if (VisualConfig.potionsHud) g.renderOutline((int) VisualConfig.potionsX - 2, (int) VisualConfig.potionsY - 2, 114, 48, col);
+        // Магнитные направляющие при перетаскивании
+        if (draggingHud != -1 && VisualConfig.hudSnapLines) {
+            if (snapLineX != null) g.fill(Math.round(snapLineX), 0, Math.round(snapLineX) + 1, this.height, c2);
+            if (snapLineY != null) g.fill(0, Math.round(snapLineY), this.width, Math.round(snapLineY) + 1, c2);
+        }
+
+        // Рамки всех 5 элементов HUD + квадратный маркер изменения размера в правом нижнем углу
+        if (VisualConfig.watermark) drawHudBox(g, VisualConfig.watermarkX, VisualConfig.watermarkY, 155 * VisualConfig.watermarkScale, 18 * VisualConfig.watermarkScale, c1);
+        if (VisualConfig.keystrokes) drawHudBox(g, VisualConfig.keystrokesX, VisualConfig.keystrokesY, 82 * VisualConfig.keystrokesScale, 68 * VisualConfig.keystrokesScale, c1);
+        if (VisualConfig.armorHud) drawHudBox(g, VisualConfig.armorX, VisualConfig.armorY, 74 * VisualConfig.armorScale, 18 * VisualConfig.armorScale, c1);
+        if (VisualConfig.potionsHud) drawHudBox(g, VisualConfig.potionsX, VisualConfig.potionsY, 105 * VisualConfig.potionsScale, 42 * VisualConfig.potionsScale, c1);
+        if (VisualConfig.targetHud) drawHudBox(g, VisualConfig.targetHudX, VisualConfig.targetHudY, 124 * VisualConfig.targetHudScale, 36 * VisualConfig.targetHudScale, c1);
     }
 
+    private void drawHudBox(GuiGraphics g, float x, float y, float w, float h, int c1) {
+        int ix = Math.round(x), iy = Math.round(y), iw = Math.round(w), ih = Math.round(h);
+        g.renderOutline(ix - 2, iy - 2, iw + 4, ih + 4, (0x77 << 24) | (c1 & 0x00FFFFFF));
+        // Маркер изменения размера (правый нижний угол)
+        g.fill(ix + iw - 3, iy + ih - 3, ix + iw + 3, iy + ih + 3, c1);
+    }
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (button != 0) return super.mouseClicked(mouseX, mouseY, button);
@@ -215,15 +233,26 @@ public class HudAndGuiScreen extends Screen {
             }
         }
 
+        // Проверка клика по HUD вне окна меню (сначала уголок изменения размера, затем само тело HUD)
         if (mouseX < winX || mouseX > winX + winW || mouseY < winY || mouseY > winY + winH) {
-            if (checkHudHit(mouseX, mouseY, VisualConfig.watermarkX, VisualConfig.watermarkY, 150, 18, 0)) return true;
-            if (checkHudHit(mouseX, mouseY, VisualConfig.keystrokesX, VisualConfig.keystrokesY, 84, 78, 1)) return true;
-            if (checkHudHit(mouseX, mouseY, VisualConfig.potionsX, VisualConfig.potionsY, 110, 45, 3)) return true;
+            if (VisualConfig.watermark && checkHudAction(mouseX, mouseY, VisualConfig.watermarkX, VisualConfig.watermarkY, 155 * VisualConfig.watermarkScale, 18 * VisualConfig.watermarkScale, 0, VisualConfig.watermarkScale)) return true;
+            if (VisualConfig.keystrokes && checkHudAction(mouseX, mouseY, VisualConfig.keystrokesX, VisualConfig.keystrokesY, 82 * VisualConfig.keystrokesScale, 68 * VisualConfig.keystrokesScale, 1, VisualConfig.keystrokesScale)) return true;
+            if (VisualConfig.armorHud && checkHudAction(mouseX, mouseY, VisualConfig.armorX, VisualConfig.armorY, 74 * VisualConfig.armorScale, 18 * VisualConfig.armorScale, 2, VisualConfig.armorScale)) return true;
+            if (VisualConfig.potionsHud && checkHudAction(mouseX, mouseY, VisualConfig.potionsX, VisualConfig.potionsY, 105 * VisualConfig.potionsScale, 42 * VisualConfig.potionsScale, 3, VisualConfig.potionsScale)) return true;
+            if (VisualConfig.targetHud && checkHudAction(mouseX, mouseY, VisualConfig.targetHudX, VisualConfig.targetHudY, 124 * VisualConfig.targetHudScale, 36 * VisualConfig.targetHudScale, 4, VisualConfig.targetHudScale)) return true;
         }
         return super.mouseClicked(mouseX, mouseY, button);
     }
 
-    private boolean checkHudHit(double mx, double my, float hx, float hy, float hw, float hh, int id) {
+    private boolean checkHudAction(double mx, double my, float hx, float hy, float hw, float hh, int id, float curScale) {
+        // Клик по правому нижнему маркеру = Resize
+        if (Math.abs(mx - (hx + hw)) <= 6 && Math.abs(my - (hy + hh)) <= 6) {
+            resizingHud = id;
+            resizeStartX = (float) mx;
+            resizeStartScale = curScale;
+            return true;
+        }
+        // Клик по телу блока = Drag
         if (mx >= hx && mx <= hx + hw && my >= hy && my <= hy + hh) {
             draggingHud = id;
             dragOffsetX = (float) mx - hx;
@@ -240,11 +269,43 @@ public class HudAndGuiScreen extends Screen {
             activeSlider.updateValue(mouseX, winX + 126, 470 - 138);
             return true;
         }
+        if (resizingHud != -1) {
+            float newScale = Mth.clamp(resizeStartScale + ((float) mouseX - resizeStartX) / 100f, 0.5f, 2.2f);
+            switch (resizingHud) {
+                case 0 -> VisualConfig.watermarkScale = newScale;
+                case 1 -> VisualConfig.keystrokesScale = newScale;
+                case 2 -> VisualConfig.armorScale = newScale;
+                case 3 -> VisualConfig.potionsScale = newScale;
+                case 4 -> VisualConfig.targetHudScale = newScale;
+            }
+            return true;
+        }
         if (draggingHud != -1) {
-            float nx = (float) mouseX - dragOffsetX, ny = (float) mouseY - dragOffsetY;
-            if (draggingHud == 0) { VisualConfig.watermarkX = nx; VisualConfig.watermarkY = ny; }
-            if (draggingHud == 1) { VisualConfig.keystrokesX = nx; VisualConfig.keystrokesY = ny; }
-            if (draggingHud == 3) { VisualConfig.potionsX = nx; VisualConfig.potionsY = ny; }
+            float nx = (float) mouseX - dragOffsetX;
+            float ny = (float) mouseY - dragOffsetY;
+            snapLineX = null;
+            snapLineY = null;
+
+            if (VisualConfig.hudSnapLines) {
+                float[] otherX = {10f, this.width / 2f, VisualConfig.watermarkX, VisualConfig.keystrokesX, VisualConfig.armorX, VisualConfig.potionsX, VisualConfig.targetHudX};
+                float[] otherY = {10f, this.height / 2f, VisualConfig.watermarkY, VisualConfig.keystrokesY, VisualConfig.armorY, VisualConfig.potionsY, VisualConfig.targetHudY};
+                for (int i = 0; i < otherX.length; i++) {
+                    if (i - 2 == draggingHud) continue;
+                    if (Math.abs(nx - otherX[i]) < 6f) { nx = otherX[i]; snapLineX = otherX[i]; break; }
+                }
+                for (int i = 0; i < otherY.length; i++) {
+                    if (i - 2 == draggingHud) continue;
+                    if (Math.abs(ny - otherY[i]) < 6f) { ny = otherY[i]; snapLineY = otherY[i]; break; }
+                }
+            }
+
+            switch (draggingHud) {
+                case 0 -> { VisualConfig.watermarkX = nx; VisualConfig.watermarkY = ny; }
+                case 1 -> { VisualConfig.keystrokesX = nx; VisualConfig.keystrokesY = ny; }
+                case 2 -> { VisualConfig.armorX = nx; VisualConfig.armorY = ny; }
+                case 3 -> { VisualConfig.potionsX = nx; VisualConfig.potionsY = ny; }
+                case 4 -> { VisualConfig.targetHudX = nx; VisualConfig.targetHudY = ny; }
+            }
             return true;
         }
         return super.mouseDragged(mouseX, mouseY, button, dx, dy);
@@ -254,6 +315,9 @@ public class HudAndGuiScreen extends Screen {
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
         activeSlider = null;
         draggingHud = -1;
+        resizingHud = -1;
+        snapLineX = null;
+        snapLineY = null;
         return super.mouseReleased(mouseX, mouseY, button);
     }
 
@@ -332,6 +396,18 @@ public class HudAndGuiScreen extends Screen {
         if (mc.player == null || mc.options.hideGui) return;
         int c1 = VisualConfig.getPrimaryColor(), c2 = VisualConfig.getSecondaryColor();
         long now = System.currentTimeMillis();
+        int sw = mc.getWindow().getGuiScaledWidth(), sh = mc.getWindow().getGuiScaledHeight();
+
+        // Трекинг комбо, дистанции удара и CPS
+        if (mc.player.hurtTime > lastHurtTime) comboCount = 0;
+        lastHurtTime = mc.player.hurtTime;
+
+        if (mc.player.attackAnim > 0 && mc.crosshairPickEntity instanceof LivingEntity target && now - lastHitTime > 250L) {
+            lastHitTime = now;
+            comboCount++;
+            lastReach = (float) mc.player.getEyePosition().distanceTo(target.getBoundingBox().getCenter());
+        }
+        if (now - lastHitTime > 4000L) comboCount = 0;
 
         boolean lmb = mc.options.keyAttack.isDown(), rmb = mc.options.keyUse.isDown();
         if (lmb && !wasLmbDown) leftClicks.add(now);
@@ -340,72 +416,127 @@ public class HudAndGuiScreen extends Screen {
         leftClicks.removeIf(t -> now - t > 1000L);
         rightClicks.removeIf(t -> now - t > 1000L);
 
+        // 0. Красная виньетка при малом HP
+        if (VisualConfig.lowHpVignette && mc.player.getHealth() < 7.0f) {
+            int pulse = (int) ((Math.sin(now / 150.0) + 1.0) * 45 + 30);
+            int vigCol = (pulse << 24) | 0xFF0022;
+            g.fill(0, 0, sw, 18, vigCol);
+            g.fill(0, sh - 18, sw, sh, vigCol);
+            g.fill(0, 18, 18, sh - 18, vigCol);
+            g.fill(sw - 18, 18, sw, sh - 18, vigCol);
+        }
+
+        // 1. Watermark
         if (VisualConfig.watermark) {
+            g.pose().pushPose();
+            g.pose().translate(VisualConfig.watermarkX, VisualConfig.watermarkY, 0);
+            g.pose().scale(VisualConfig.watermarkScale, VisualConfig.watermarkScale, 1f);
             String nick = VisualConfig.streamerMode ? "MT_User" : mc.player.getName().getString();
             String txt = "⚡ MTVisuals | " + nick + " | " + mc.getFps() + " FPS";
-            int wx = (int) VisualConfig.watermarkX, wy = (int) VisualConfig.watermarkY, ww = mc.font.width(txt) + 14;
-            g.fill(wx, wy, wx + ww, wy + 18, 0xCC0D0F18);
-            g.fill(wx, wy, wx + ww, wy + 2, c1);
-            g.drawString(mc.font, txt, wx + 7, wy + 5, 0xFFFFFFFF, true);
+            int ww = mc.font.width(txt) + 14;
+            g.fill(0, 0, ww, 18, 0xCC0D0F18);
+            g.fill(0, 0, ww, 2, c1);
+            g.drawString(mc.font, txt, 7, 5, 0xFFFFFFFF, true);
+            g.pose().popPose();
         }
 
+        // 2. Keystrokes + CPS
         if (VisualConfig.keystrokes) {
-            int kx = (int) VisualConfig.keystrokesX, ky = (int) VisualConfig.keystrokesY;
-            drawKey(g, mc, "W", kx + 28, ky, 26, 22, mc.options.keyUp.isDown(), c1);
-            drawKey(g, mc, "A", kx, ky + 24, 26, 22, mc.options.keyLeft.isDown(), c1);
-            drawKey(g, mc, "S", kx + 28, ky + 24, 26, 22, mc.options.keyDown.isDown(), c1);
-            drawKey(g, mc, "D", kx + 56, ky + 24, 26, 22, mc.options.keyRight.isDown(), c1);
+            g.pose().pushPose();
+            g.pose().translate(VisualConfig.keystrokesX, VisualConfig.keystrokesY, 0);
+            g.pose().scale(VisualConfig.keystrokesScale, VisualConfig.keystrokesScale, 1f);
+            drawKey(g, mc, "W", 28, 0, 26, 22, mc.options.keyUp.isDown(), c1);
+            drawKey(g, mc, "A", 0, 24, 26, 22, mc.options.keyLeft.isDown(), c1);
+            drawKey(g, mc, "S", 28, 24, 26, 22, mc.options.keyDown.isDown(), c1);
+            drawKey(g, mc, "D", 56, 24, 26, 22, mc.options.keyRight.isDown(), c1);
             String lTxt = VisualConfig.keystrokesCps ? "L:" + leftClicks.size() : "LMB";
             String rTxt = VisualConfig.keystrokesCps ? "R:" + rightClicks.size() : "RMB";
-            drawKey(g, mc, lTxt, kx, ky + 48, 40, 20, lmb, c2);
-            drawKey(g, mc, rTxt, kx + 42, ky + 48, 40, 20, rmb, c2);
+            drawKey(g, mc, lTxt, 0, 48, 40, 20, lmb, c2);
+            drawKey(g, mc, rTxt, 42, 48, 40, 20, rmb, c2);
+            g.pose().popPose();
         }
-
+        // 3. Armor HUD + предупреждение о поломке
+        boolean lowArmor = false;
         if (VisualConfig.armorHud) {
-            int ax = mc.getWindow().getGuiScaledWidth() / 2 + 12, ay = mc.getWindow().getGuiScaledHeight() - 56;
+            g.pose().pushPose();
+            g.pose().translate(VisualConfig.armorX, VisualConfig.armorY, 0);
+            g.pose().scale(VisualConfig.armorScale, VisualConfig.armorScale, 1f);
+            int ax = 0;
             for (ItemStack armor : mc.player.getArmorSlots()) {
                 if (!armor.isEmpty()) {
-                    g.renderItem(armor, ax, ay);
-                    g.renderItemDecorations(mc.font, armor, ax, ay);
+                    g.renderItem(armor, ax, 0);
+                    g.renderItemDecorations(mc.font, armor, ax, 0);
+                    if (armor.isDamageableItem() && (float) (armor.getMaxDamage() - armor.getDamageValue()) / armor.getMaxDamage() < 0.2f) {
+                        lowArmor = true;
+                    }
                     ax += 18;
                 }
             }
+            g.pose().popPose();
+        }
+        if (VisualConfig.armorBreakWarning && lowArmor) {
+            g.drawCenteredString(mc.font, "§c§l⚠ БРОНЯ ПОЧТИ СЛОМАНА!", sw / 2, sh / 2 - 42, 0xFFFF3355);
         }
 
+        // 4. Potions HUD
         if (VisualConfig.potionsHud) {
-            int py = (int) VisualConfig.potionsY, px = (int) VisualConfig.potionsX;
+            g.pose().pushPose();
+            g.pose().translate(VisualConfig.potionsX, VisualConfig.potionsY, 0);
+            g.pose().scale(VisualConfig.potionsScale, VisualConfig.potionsScale, 1f);
+            int py = 0;
             for (MobEffectInstance eff : mc.player.getActiveEffects()) {
                 String lbl = eff.getEffect().value().getDisplayName().getString() + " " + (eff.getDuration() / 20) + "s";
-                g.fill(px, py, px + mc.font.width(lbl) + 10, py + 14, 0xBB0D0F18);
-                g.fill(px, py, px + 2, py + 14, c2);
-                g.drawString(mc.font, lbl, px + 5, py + 3, 0xFFFFFFFF, true);
+                g.fill(0, py, mc.font.width(lbl) + 10, py + 14, 0xBB0D0F18);
+                g.fill(0, py, 2, py + 14, c2);
+                g.drawString(mc.font, lbl, 5, py + 3, 0xFFFFFFFF, true);
                 py += 16;
             }
+            g.pose().popPose();
         }
 
-        if (VisualConfig.targetHud && mc.crosshairPickEntity instanceof LivingEntity target) {
-            int sx = mc.getWindow().getGuiScaledWidth() / 2 + 16, sy = mc.getWindow().getGuiScaledHeight() / 2 + 12;
+        // 5. Target HUD (перетаскиваемый и масштабируемый)
+        if (VisualConfig.targetHud && (mc.crosshairPickEntity instanceof LivingEntity || mc.currentScreen instanceof HudAndGuiScreen)) {
+            LivingEntity target = (mc.crosshairPickEntity instanceof LivingEntity le) ? le : mc.player;
+            g.pose().pushPose();
+            g.pose().translate(VisualConfig.targetHudX, VisualConfig.targetHudY, 0);
+            g.pose().scale(VisualConfig.targetHudScale, VisualConfig.targetHudScale, 1f);
             animatedTargetHp = Mth.lerp(0.15f, animatedTargetHp, target.getHealth());
             float pct = Mth.clamp(animatedTargetHp / Math.max(1f, target.getMaxHealth()), 0f, 1f);
-            g.fill(sx, sy, sx + 124, sy + 36, 0xDD0D0F18);
-            g.fill(sx, sy, sx + 124, sy + 2, c1);
-            g.drawString(mc.font, target.getName().getString(), sx + 6, sy + 6, 0xFFFFFFFF, true);
-            g.drawString(mc.font, String.format("%.1f ❤", animatedTargetHp), sx + 6, sy + 17, 0xFFFF5577, true);
-            g.fill(sx + 6, sy + 28, sx + 118, sy + 32, 0xFF252A3D);
-            g.fill(sx + 6, sy + 28, sx + 6 + (int) (112 * pct), sy + 32, c1);
+            g.fill(0, 0, 124, 36, 0xDD0D0F18);
+            g.fill(0, 0, 124, 2, c1);
+            g.drawString(mc.font, target.getName().getString(), 6, 6, 0xFFFFFFFF, true);
+            g.drawString(mc.font, String.format("%.1f ❤", animatedTargetHp), 6, 17, 0xFFFF5577, true);
+            g.fill(6, 28, 118, 32, 0xFF252A3D);
+            g.fill(6, 28, 6 + (int) (112 * pct), 32, c1);
+            g.pose().popPose();
         }
 
+        // 6. Счётчик Комбо и дистанции удара
+        if (VisualConfig.comboCounter && comboCount > 0) {
+            String cmb = String.format("COMBO: %dx | REACH: %.2fm", comboCount, lastReach);
+            g.drawCenteredString(mc.font, cmb, sw / 2, sh / 2 + 24, c1);
+        }
+
+        // 7. Неоновая подсветка выбранного слота хотбара
+        if (VisualConfig.hotbarGlow) {
+            int slotX = sw / 2 - 91 + mc.player.getInventory().selected * 20;
+            g.renderOutline(slotX, sh - 22, 22, 22, c1);
+        }
+
+        // 8. ArrayList справа сверху
         if (VisualConfig.arrayList) {
             List<String> active = new ArrayList<>();
             if (VisualConfig.targetEsp) active.add("TargetESP [" + VisualConfig.getTargetEspName() + "]");
+            if (VisualConfig.blockOverlay) active.add("BlockOverlay");
+            if (VisualConfig.crystalRadius) active.add("CrystalRadius");
+            if (VisualConfig.playerTracers) active.add("Tracers");
             if (VisualConfig.trails) active.add("Trails");
             if (VisualConfig.jumpCircles) active.add("JumpCircles");
             if (VisualConfig.hitParticles) active.add("HitParticles");
             if (VisualConfig.trajectories) active.add("Trajectories");
-            if (VisualConfig.handView) active.add("ViewModel [" + VisualConfig.getSwingName() + "]");
-            if (VisualConfig.fullbright) active.add("Fullbright");
+            if (VisualConfig.handView) active.add("ViewModel");
             active.sort((a, b) -> mc.font.width(b) - mc.font.width(a));
-            int ay = 6, sw = mc.getWindow().getGuiScaledWidth();
+            int ay = 6;
             for (String m : active) {
                 int mw = mc.font.width(m) + 8;
                 g.fill(sw - mw - 4, ay, sw - 4, ay + 13, 0xAA0D0F18);
@@ -415,13 +546,21 @@ public class HudAndGuiScreen extends Screen {
             }
         }
 
+        // 9. Кастомный прицел (3 стиля)
         if (VisualConfig.customCrosshair) {
-            int cx = mc.getWindow().getGuiScaledWidth() / 2, cy = mc.getWindow().getGuiScaledHeight() / 2;
+            int cx = sw / 2, cy = sh / 2;
             int gap = VisualConfig.dynamicCrosshair && mc.player.getDeltaMovement().horizontalDistanceSqr() > 0.002 ? 6 : 3;
-            g.fill(cx - gap - 5, cy, cx - gap, cy + 1, c1);
-            g.fill(cx + gap + 1, cy, cx + gap + 6, cy + 1, c1);
-            g.fill(cx, cy - gap - 5, cx + 1, cy - gap, c2);
-            g.fill(cx, cy + gap + 1, cx + 1, cy + gap + 6, c2);
+            if (VisualConfig.crosshairStyle == 1) {
+                g.renderOutline(cx - gap - 2, cy - gap - 2, (gap + 2) * 2 + 1, (gap + 2) * 2 + 1, c1);
+            } else if (VisualConfig.crosshairStyle == 2) {
+                g.fill(cx - gap - 3, cy - 4, cx - gap - 2, cy + 5, c1);
+                g.fill(cx + gap + 3, cy - 4, cx + gap + 4, cy + 5, c1);
+            } else {
+                g.fill(cx - gap - 5, cy, cx - gap, cy + 1, c1);
+                g.fill(cx + gap + 1, cy, cx + gap + 6, cy + 1, c1);
+                g.fill(cx, cy - gap - 5, cx + 1, cy - gap, c2);
+                g.fill(cx, cy + gap + 1, cx + 1, cy + gap + 6, c2);
+            }
         }
     }
 
