@@ -6,7 +6,9 @@
   "client": [
     "ClientLevelMixin",
     "GuiGraphicsMixin",
-    "ItemInHandMixin"
+    "ItemInHandMixin",
+    "FogMixin",
+    "NoHurtCamMixin"
   ],
   "injectors": {
     "defaultRequire": 1
