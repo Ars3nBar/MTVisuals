@@ -33,12 +33,12 @@ public class MTVisualsClient implements ClientModInitializer {
         ));
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            HudAndGuiScreen.tickHud();
             while (openGuiKey.consumeClick()) {
                 if (client.screen == null) {
                     client.setScreen(new HudAndGuiScreen());
                 }
             }
-            HudAndGuiScreen.tickHud();
         });
 
         WorldRenderEvents.AFTER_TRANSLUCENT.register(WorldVisualRenderer::renderWorld);
