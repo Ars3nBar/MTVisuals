@@ -30,14 +30,14 @@ public class ItemInHandMixin {
         if (swingProgress > 0 && VisualConfig.swingAnimation > 0) {
             float sp = Mth.sin(Mth.sqrt(swingProgress) * (float) Math.PI);
             switch (VisualConfig.swingAnimation) {
-                case 1 -> poseStack.mulPose(Axis.ZP.rotationDegrees(sp * -45f * side)); // Smooth Spin
-                case 2 -> { // Block Hit
+                case 1 -> poseStack.mulPose(Axis.ZP.rotationDegrees(sp * -45f * side));
+                case 2 -> {
                     poseStack.translate(-0.12f * side, 0.08f, 0f);
                     poseStack.mulPose(Axis.XP.rotationDegrees(-sp * 55f));
                     poseStack.mulPose(Axis.YP.rotationDegrees(sp * 30f * side));
                 }
-                case 3 -> poseStack.mulPose(Axis.YP.rotationDegrees(sp * 70f * side)); // Cyber Slap
-                case 4 -> { // Power Down
+                case 3 -> poseStack.mulPose(Axis.YP.rotationDegrees(sp * 70f * side));
+                case 4 -> {
                     poseStack.translate(0f, -sp * 0.18f, 0f);
                     poseStack.mulPose(Axis.XP.rotationDegrees(-sp * 65f));
                 }
