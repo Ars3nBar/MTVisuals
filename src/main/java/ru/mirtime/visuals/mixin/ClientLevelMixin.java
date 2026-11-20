@@ -19,7 +19,7 @@ public class ClientLevelMixin {
             case 2 -> 12800L; // Красивый закат
             case 3 -> 18000L; // Глубокая ночь
             case 4 -> (System.currentTimeMillis() / 10L) % 24000L; // Плавный цикл
-            default -> VisualConfig.customTimeTick;
+            default -> 12800L;
         };
         cir.setReturnValue(time);
     }
