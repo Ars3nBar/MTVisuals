@@ -8,7 +8,9 @@
     "GuiGraphicsMixin",
     "ItemInHandMixin",
     "FogMixin",
-    "NoHurtCamMixin"
+    "NoHurtCamMixin",
+    "GammaMixin",
+    "ZoomMixin"
   ],
   "injectors": {
     "defaultRequire": 1
