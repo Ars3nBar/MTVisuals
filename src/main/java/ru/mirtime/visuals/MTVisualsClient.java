@@ -38,6 +38,7 @@ public class MTVisualsClient implements ClientModInitializer {
                     client.setScreen(new HudAndGuiScreen());
                 }
             }
+            HudAndGuiScreen.tickHud();
         });
 
         WorldRenderEvents.AFTER_TRANSLUCENT.register(WorldVisualRenderer::renderWorld);
